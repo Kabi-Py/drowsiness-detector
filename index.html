@@ -3,50 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Drowsiness & Distraction Detector</title>
+    <title>Advanced AI Drowsiness & Distraction Detector</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
-    <div class="max-w-4xl w-full bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-700">
-        <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                AI Drowsiness & Distraction Detector
-            </h1>
-            <p class="text-slate-400 text-sm mt-1">Powered by MediaPipe Face Mesh & Eye Aspect Ratio (EAR)</p>
+    <div class="max-w-5xl w-full glass-panel rounded-3xl shadow-2xl p-6 md:p-8 border border-slate-700/60 relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <header class="flex flex-col md:flex-row justify-between items-center pb-6 mb-6 border-b border-slate-700/50 gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
+                    AuraGuard AI
+                </h1>
+                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness & Distraction Monitor</p>
+            </div>
+            <div id="status-badge" class="px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 shadow-lg transition-all duration-300 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse" id="status-dot"></span>
+                <span id="status-text">Initializing System...</span>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <div class="md:col-span-2 relative flex justify-center bg-black rounded-xl overflow-hidden shadow-inner border border-slate-700">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            <div class="lg:col-span-2 relative flex justify-center bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 aspect-video group">
                 <video id="webcam" class="hidden" playsinline></video>
-                <canvas id="output_canvas" class="w-full h-auto object-cover transform -scale-x-100"></canvas>
+                <canvas id="output_canvas" class="w-full h-full object-cover transform -scale-x-100"></canvas>
+                
+                <div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Live Tracking Active</span>
+                </div>
             </div>
 
-            <div class="flex flex-col space-y-4 bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                <div class="text-center">
-                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">System Status</span>
-                    <div class="mt-2">
-                        <span id="status-badge" class="px-4 py-2 rounded-full text-white font-bold bg-gray-500 inline-block shadow">
-                            Initializing...
-                        </span>
+            <div class="flex flex-col space-y-4">
+                
+                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 shadow-inner">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average EAR</span>
+                        <span id="ear-value" class="font-mono font-bold text-xl text-blue-400">0.000</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                        <div id="ear-bar" class="bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-xs text-slate-400">
+                        <span>Threshold Limit: <strong class="text-slate-200">0.220</strong></span>
+                        <span id="threshold-status" class="text-emerald-400 font-medium">Safe</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                    <div class="flex justify-between items-center text-sm mb-1">
-                        <span class="text-slate-400">Current EAR:</span>
-                        <span id="ear-value" class="font-mono font-bold text-lg text-blue-400">0.000</span>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80 text-center">
+                        <span class="text-[11px] font-medium text-slate-400 block mb-1">Left Eye EAR</span>
+                        <span id="left-ear" class="font-mono font-semibold text-lg text-indigo-300">0.000</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-slate-400">Threshold:</span>
-                        <span class="font-mono text-slate-300">0.220</span>
+                    <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80 text-center">
+                        <span class="text-[11px] font-medium text-slate-400 block mb-1">Right Eye EAR</span>
+                        <span id="right-ear" class="font-mono font-semibold text-lg text-indigo-300">0.000</span>
                     </div>
                 </div>
 
-                <div class="text-xs text-slate-400 leading-relaxed bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
-                    <p>💡 <strong class="text-slate-300">How it works:</strong> The detector maps 468 3D facial landmarks to calculate the Eye Aspect Ratio (EAR). If eyes remain closed for ~1.5 seconds, an alarm will sound.</p>
+                <div class="text-xs text-slate-400 leading-relaxed bg-slate-900/40 p-4 rounded-xl border border-slate-800/80">
+                    <p class="flex items-start gap-2">
+                        <span class="text-blue-400 font-bold text-sm">ℹ️</span>
+                        <span>The system triggers an audio warning <strong>only when both eyes</strong> remain shut beneath the safe threshold continuously for ~1.5 seconds.</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -60,7 +93,7 @@
         let drowsyFrames = 0;
         let audioCtx = null;
 
-        // Web Audio API Alarm Sound
+        // Web Audio API Alarm Sound Generation
         function playAlarm() {
             try {
                 if (!audioCtx) {
@@ -69,10 +102,10 @@
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.type = 'sawtooth';
-                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(580, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
                 
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
 
                 oscillator.connect(gainNode);
@@ -111,6 +144,28 @@
         const RIGHT_EYE = [33, 159, 158, 133, 153, 145];
         const LEFT_EYE = [362, 380, 374, 263, 386, 385];
 
+        function updateStatusUI(state, message) {
+            const badge = document.getElementById('status-badge');
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+
+            text.innerText = message;
+
+            if (state === 'safe') {
+                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 shadow-lg transition-all duration-300 flex items-center gap-2";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+            } else if (state === 'warning') {
+                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-amber-950/60 border border-amber-500/30 text-amber-300 shadow-lg transition-all duration-300 flex items-center gap-2";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+            } else if (state === 'danger') {
+                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow-lg shadow-red-900/30 transition-all duration-300 flex items-center gap-2 animate-pulse";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-ping";
+            } else {
+                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow-lg transition-all duration-300 flex items-center gap-2";
+                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+            }
+        }
+
         function onResults(results) {
             canvasElement.width = videoElement.videoWidth || 640;
             canvasElement.height = videoElement.videoHeight || 480;
@@ -126,34 +181,49 @@
                 const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
                 const avgEAR = (leftEAR + rightEAR) / 2.0;
 
+                // Update text telemetry
                 document.getElementById('ear-value').innerText = avgEAR.toFixed(3);
+                document.getElementById('left-ear').innerText = leftEAR.toFixed(3);
+                document.getElementById('right-ear').innerText = rightEAR.toFixed(3);
+
+                // Update Progress bar width (scale 0 to 0.4 max)
+                let barPercentage = Math.min(Math.max((avgEAR / 0.4) * 100, 0), 100);
+                document.getElementById('ear-bar').style.width = barPercentage + '%';
 
                 const EAR_THRESHOLD = 0.22;
                 const CONSECUTIVE_FRAMES = 45; // ~1.5 seconds at 30fps
 
-                if (avgEAR < EAR_THRESHOLD) {
+                // STRICT CONDITION: Both eyes must be closed simultaneously
+                const bothEyesClosed = (leftEAR < EAR_THRESHOLD) && (rightEAR < EAR_THRESHOLD);
+
+                if (bothEyesClosed) {
                     drowsyFrames++;
                     if (drowsyFrames > CONSECUTIVE_FRAMES) {
-                        document.getElementById('status-badge').innerText = "⚠️ DROWSINESS ALERT!";
-                        document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-red-600 animate-pulse inline-block shadow";
+                        updateStatusUI('danger', '⚠️ DROWSINESS DETECTED!');
+                        document.getElementById('threshold-status').innerText = 'Danger / Alarm Active';
+                        document.getElementById('threshold-status').className = 'text-red-400 font-bold';
                         playAlarm();
                     } else {
-                        document.getElementById('status-badge').innerText = "Eyes Closed...";
-                        document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-amber-500 inline-block shadow";
+                        updateStatusUI('warning', 'Both Eyes Closed...');
+                        document.getElementById('threshold-status').innerText = 'Closing Warning';
+                        document.getElementById('threshold-status').className = 'text-amber-400 font-medium';
                     }
                 } else {
                     drowsyFrames = 0;
-                    document.getElementById('status-badge').innerText = "Active / Awake";
-                    document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-emerald-600 inline-block shadow";
+                    updateStatusUI('safe', 'Monitoring / Active');
+                    document.getElementById('threshold-status').innerText = 'Safe';
+                    document.getElementById('threshold-status').className = 'text-emerald-400 font-medium';
                 }
 
-                // Draw eye tracking indicators
+                // Draw subtle tracking highlights
                 drawEyeLandmarks(canvasCtx, landmarks, LEFT_EYE);
                 drawEyeLandmarks(canvasCtx, landmarks, RIGHT_EYE);
             } else {
-                document.getElementById('status-badge').innerText = "No Face Detected";
-                document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-slate-600 inline-block shadow";
+                updateStatusUI('neutral', 'No Face Detected');
                 document.getElementById('ear-value').innerText = "0.000";
+                document.getElementById('left-ear').innerText = "0.000";
+                document.getElementById('right-ear').innerText = "0.000";
+                document.getElementById('ear-bar').style.width = '0%';
             }
             canvasCtx.restore();
         }
@@ -163,7 +233,7 @@
             indices.forEach(index => {
                 const pt = landmarks[index];
                 ctx.beginPath();
-                ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 3, 0, 2 * Math.PI);
+                ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 2.5, 0, 2 * Math.PI);
                 ctx.fill();
             });
         }
@@ -191,8 +261,7 @@
 
         camera.start().catch(err => {
             console.error("Camera access error:", err);
-            document.getElementById('status-badge').innerText = "Camera Access Denied";
-            document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-red-600 inline-block shadow";
+            updateStatusUI('danger', 'Camera Access Denied');
         });
     </script>
 </body>
