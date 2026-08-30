@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced AI Drowsiness & Distraction Detector - Custom Eye FX</title>
+    <title>Advanced AI Drowsiness & Distraction Detector - Realistic Eye FX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -28,7 +28,7 @@
                 <h1 class="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
                     AuraGuard AI
                 </h1>
-                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness & Distraction Monitor + Custom Eye FX</p>
+                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness Monitor + Realistic Eye FX</p>
             </div>
             <div id="status-badge" class="px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 shadow-lg transition-all duration-300 flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse" id="status-dot"></span>
@@ -178,6 +178,10 @@
         const RIGHT_EYE = [33, 159, 158, 133, 153, 145];
         const LEFT_EYE = [362, 380, 374, 263, 386, 385];
 
+        // Full eye contour landmark lists for exact clipping mask (eyelid closing/folding)
+        const RIGHT_EYE_CONTOUR = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7];
+        const LEFT_EYE_CONTOUR = [362, 398, 384, 385, 386, 387, 388, 466, 263, 249, 390, 373, 374, 380, 381, 382];
+
         function updateStatusUI(state, message) {
             const badge = document.getElementById('status-badge');
             const dot = document.getElementById('status-dot');
@@ -246,9 +250,9 @@
                     document.getElementById('threshold-status').className = 'text-emerald-400 font-medium';
                 }
 
-                // Render selected eye effect on both eyes
-                drawEyeEffect(canvasCtx, landmarks, true, currentEffect, canvasElement.width, canvasElement.height);
-                drawEyeEffect(canvasCtx, landmarks, false, currentEffect, canvasElement.width, canvasElement.height);
+                // Render selected eye effect on both eyes with eyelid clipping
+                drawClippedEyeEffect(canvasCtx, landmarks, true, currentEffect, canvasElement.width, canvasElement.height);
+                drawClippedEyeEffect(canvasCtx, landmarks, false, currentEffect, canvasElement.width, canvasElement.height);
             } else {
                 updateStatusUI('neutral', 'No Face Detected');
                 document.getElementById('ear-value').innerText = "0.000";
@@ -259,45 +263,82 @@
             canvasCtx.restore();
         }
 
-        function drawEyeEffect(ctx, landmarks, isLeft, effect, width, height) {
-            let centerIdx = isLeft ? 473 : 468;
-            let pt = landmarks[centerIdx] || landmarks[isLeft ? 362 : 33];
-            let cx = pt.x * width;
-            let cy = pt.y * height;
+        function drawClippedEyeEffect(ctx, landmarks, isLeft, effect, width, height) {
+            ctx.save();
 
+            // 1. Create a clipping mask from the exact eye contour so effect folds & closes with eyelids
+            ctx.beginPath();
+            const contourIndices = isLeft ? LEFT_EYE_CONTOUR : RIGHT_EYE_CONTOUR;
+            contourIndices.forEach((idx, i) => {
+                let pt = landmarks[idx];
+                let x = pt.x * width;
+                let y = pt.y * height;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.clip();
+
+            // 2. Determine precise iris center (`473` for left eye iris, `468` for right eye iris)
+            let centerIdx = isLeft ? 473 : 468;
+            let irisPt = landmarks[centerIdx] || landmarks[isLeft ? 362 : 33];
+            let cx = irisPt.x * width;
+            let cy = irisPt.y * height;
+
+            // Compute eye width to scale the iris effect perfectly
             let innerCorner = landmarks[isLeft ? 362 : 33];
             let outerCorner = landmarks[isLeft ? 263 : 133];
             let eyeWidth = euclideanDistance(innerCorner, outerCorner) * width;
-            let r = eyeWidth * 0.38;
+            let r = eyeWidth * 0.42; // Perfect radius matching human iris proportion
 
-            ctx.save();
             ctx.translate(cx, cy);
 
             if (effect === 'sharingan') {
+                // Authentic Sharingan Design (Crimson background, outer black ring, central pupil, 3 Tomoe commas)
+                let grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+                grad.addColorStop(0, '#ff1e00');
+                grad.addColorStop(0.7, '#d90429');
+                grad.addColorStop(1, '#800000');
+
                 ctx.beginPath();
                 ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                ctx.fillStyle = '#dc2626';
+                ctx.fillStyle = grad;
                 ctx.fill();
-                ctx.lineWidth = r * 0.12;
-                ctx.strokeStyle = '#991b1b';
+                ctx.lineWidth = r * 0.15;
+                ctx.strokeStyle = '#000000';
                 ctx.stroke();
 
+                // Inner black ring around pupil
                 ctx.beginPath();
-                ctx.arc(0, 0, r * 0.55, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
+                ctx.arc(0, 0, r * 0.52, 0, 2 * Math.PI);
+                ctx.lineWidth = r * 0.08;
+                ctx.strokeStyle = '#000000';
+                ctx.stroke();
 
+                // Central black pupil
                 ctx.beginPath();
                 ctx.arc(0, 0, r * 0.22, 0, 2 * Math.PI);
                 ctx.fillStyle = '#000000';
                 ctx.fill();
 
+                // 3 Authentic Tomoe (comma shapes) spaced at 120 degrees
                 for (let i = 0; i < 3; i++) {
                     ctx.save();
-                    ctx.rotate((i * 2 * Math.PI) / 3);
-                    let tomoeDist = r * 0.38;
+                    ctx.rotate((i * 2 * Math.PI) / 3 + (Date.now() / 3000)); // Gentle rotation animation
+                    let tomoeDist = r * 0.72;
+                    
+                    // Comma head
                     ctx.beginPath();
-                    ctx.arc(tomoeDist, 0, r * 0.12, 0, 2 * Math.PI);
+                    ctx.arc(tomoeDist, 0, r * 0.13, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#000000';
+                    ctx.fill();
+
+                    // Comma tail
+                    ctx.beginPath();
+                    ctx.moveTo(tomoeDist - r * 0.1, -r * 0.05);
+                    ctx.quadraticCurveTo(tomoeDist - r * 0.4, -r * 0.3, tomoeDist - r * 0.6, -r * 0.45);
+                    ctx.quadraticCurveTo(tomoeDist - r * 0.3, -r * 0.15, tomoeDist + r * 0.05, r * 0.05);
+                    ctx.closePath();
                     ctx.fillStyle = '#000000';
                     ctx.fill();
                     ctx.restore();
@@ -305,8 +346,8 @@
             } else if (effect === 'reptilian') {
                 let grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
                 grad.addColorStop(0, '#facc15');
-                grad.addColorStop(0.7, '#ca8a04');
-                grad.addColorStop(1, '#1e293b');
+                grad.addColorStop(0.6, '#ca8a04');
+                grad.addColorStop(1, '#451a03');
 
                 ctx.beginPath();
                 ctx.arc(0, 0, r, 0, 2 * Math.PI);
@@ -316,8 +357,9 @@
                 ctx.strokeStyle = '#713f12';
                 ctx.stroke();
 
+                // Vertical slit pupil
                 ctx.beginPath();
-                ctx.ellipse(0, 0, r * 0.16, r * 0.78, 0, 0, 2 * Math.PI);
+                ctx.ellipse(0, 0, r * 0.15, r * 0.85, 0, 0, 2 * Math.PI);
                 ctx.fillStyle = '#000000';
                 ctx.fill();
                 ctx.lineWidth = 1.5;
@@ -327,22 +369,22 @@
                 ctx.beginPath();
                 ctx.arc(0, 0, r, 0, 2 * Math.PI);
                 ctx.strokeStyle = '#06b6d4';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2.5;
                 ctx.setLineDash([4, 4]);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 ctx.save();
-                ctx.rotate(Date.now() / 600);
+                ctx.rotate(Date.now() / 500);
                 ctx.beginPath();
-                ctx.arc(0, 0, r * 1.25, 0, Math.PI / 2);
+                ctx.arc(0, 0, r * 1.2, 0, Math.PI / 1.5);
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 ctx.restore();
 
                 ctx.beginPath();
-                ctx.arc(0, 0, r * 0.3, 0, 2 * Math.PI);
+                ctx.arc(0, 0, r * 0.32, 0, 2 * Math.PI);
                 ctx.fillStyle = '#22d3ee';
                 ctx.fill();
                 ctx.beginPath();
@@ -354,7 +396,7 @@
                 grad.addColorStop(0, '#fef08a');
                 grad.addColorStop(0.4, '#f97316');
                 grad.addColorStop(0.8, '#b91c1c');
-                grad.addColorStop(1, 'transparent');
+                grad.addColorStop(1, '#450a0a');
 
                 ctx.beginPath();
                 ctx.arc(0, 0, r * 1.15, 0, 2 * Math.PI);
@@ -362,7 +404,7 @@
                 ctx.fill();
 
                 ctx.beginPath();
-                ctx.ellipse(0, 0, r * 0.22, r * 0.75, 0, 0, 2 * Math.PI);
+                ctx.ellipse(0, 0, r * 0.2, r * 0.8, 0, 0, 2 * Math.PI);
                 ctx.fillStyle = '#000000';
                 ctx.fill();
                 ctx.lineWidth = 2;
@@ -370,9 +412,9 @@
                 ctx.stroke();
             } else if (effect === 'galaxy') {
                 let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-                grad.addColorStop(0, '#c084fc');
-                grad.addColorStop(0.5, '#6366f1');
-                grad.addColorStop(1, '#0f172a');
+                grad.addColorStop(0, '#e879f9');
+                grad.addColorStop(0.4, '#818cf8');
+                grad.addColorStop(1, '#020617');
 
                 ctx.beginPath();
                 ctx.arc(0, 0, r, 0, 2 * Math.PI);
@@ -380,16 +422,16 @@
                 ctx.fill();
 
                 ctx.fillStyle = '#ffffff';
-                for (let i = 0; i < 4; i++) {
-                    let angle = (i * Math.PI / 2) + (Date.now() / 800);
-                    let dist = r * 0.55;
+                for (let i = 0; i < 5; i++) {
+                    let angle = (i * Math.PI / 2.5) + (Date.now() / 1000);
+                    let dist = r * 0.6;
                     ctx.beginPath();
-                    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.08, 0, 2 * Math.PI);
+                    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.07, 0, 2 * Math.PI);
                     ctx.fill();
                 }
 
                 ctx.beginPath();
-                ctx.arc(0, 0, r * 0.25, 0, 2 * Math.PI);
+                ctx.arc(0, 0, r * 0.28, 0, 2 * Math.PI);
                 ctx.fillStyle = '#000000';
                 ctx.fill();
             }
@@ -403,7 +445,7 @@
 
         faceMesh.setOptions({
             maxNumFaces: 1,
-            refineLandmarks: true,
+            refineLandmarks: true, // Crucial for precise iris landmark tracking (468, 473)
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
