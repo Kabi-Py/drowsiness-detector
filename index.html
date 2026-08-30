@@ -3,94 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced AI Drowsiness & Distraction Detector - Realistic Eye FX</title>
+    <title>AURAGUARD AI // BRUTALIST EDITION</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        body { font-family: 'JetBrains Mono', monospace; }
+        .brutal-box {
+            background: #000000;
+            border: 4px solid #ffffff;
+            box-shadow: 8px 8px 0px 0px #00ff66;
+        }
+        .brutal-panel {
+            background: #0a0a0a;
+            border: 3px solid #ffffff;
+            box-shadow: 4px 4px 0px 0px #ffffff;
+        }
+        .brutal-btn {
+            border: 3px solid #ffffff;
+            box-shadow: 4px 4px 0px 0px #ffffff;
+            transition: all 0.1s ease;
+        }
+        .brutal-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px #00ff66;
+        }
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #00ff66;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+<body class="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
 
-    <div class="max-w-5xl w-full glass-panel rounded-3xl shadow-2xl p-6 md:p-8 border border-slate-700/60 relative overflow-hidden">
-        <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <header class="flex flex-col md:flex-row justify-between items-center pb-6 mb-6 border-b border-slate-700/50 gap-4">
+    <div class="max-w-5xl w-full brutal-box p-6 md:p-8 relative">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 mb-6 border-b-4 border-white gap-4">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-                    AuraGuard AI
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase text-[#00ff66]">
+                    // AURAGUARD.AI
                 </h1>
-                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness Monitor + Realistic Eye FX</p>
+                <p class="text-zinc-400 text-xs md:text-sm mt-1 uppercase font-bold">[BIOMETRIC DROWSINESS & OVERLAY SYSTEM]</p>
             </div>
-            <div id="status-badge" class="px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 shadow-lg transition-all duration-300 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse" id="status-dot"></span>
-                <span id="status-text">Initializing System...</span>
+            <div id="status-badge" class="px-5 py-2.5 text-xs font-extrabold uppercase bg-zinc-900 border-2 border-white shadow-[4px_4px_0px_0px_#ffffff] flex items-center gap-2">
+                <span class="w-3 h-3 bg-yellow-400 animate-pulse" id="status-dot"></span>
+                <span id="status-text">INITIALIZING SYSTEM...</span>
             </div>
         </header>
 
         <!-- Eye FX Selection Toolbar -->
-        <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Select Eye Effect:</span>
-            <div class="flex flex-wrap gap-2" id="effect-buttons">
-                <button data-effect="sharingan" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow hover:bg-red-900/80 transition-all">🔴 Sharingan</button>
-                <button data-effect="reptilian" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🦎 Reptilian</button>
-                <button data-effect="cyberpunk" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🌐 Cyberpunk</button>
-                <button data-effect="demonic" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🔥 Demonic</button>
-                <button data-effect="galaxy" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🌌 Galaxy</button>
+        <div class="mb-6 brutal-panel p-4 flex flex-wrap items-center justify-between gap-3">
+            <span class="text-xs font-extrabold uppercase tracking-widest text-[#00ff66]">&gt;&gt; SELECT EYE OVERLAY:</span>
+            <div class="flex flex-wrap gap-2.5" id="effect-buttons">
+                <button data-effect="sharingan" class="effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-red-600 text-black">🔴 SHARINGAN (3-TOMOE)</button>
+                <button data-effect="reptilian" class="effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-zinc-800 text-white">🦎 REPTILIAN</button>
+                <button data-effect="cyberpunk" class="effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-zinc-800 text-white">🌐 CYBERPUNK HUD</button>
+                <button data-effect="demonic" class="effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-zinc-800 text-white">🔥 DEMONIC FLAME</button>
+                <button data-effect="galaxy" class="effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-zinc-800 text-white">🌌 GALAXY VORTEX</button>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
-            <div class="lg:col-span-2 relative flex justify-center bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 aspect-video group">
+            <div class="lg:col-span-2 relative flex justify-center bg-zinc-950 border-4 border-white aspect-video shadow-[6px_6px_0px_0px_#00ff66]">
                 <video id="webcam" class="hidden" playsinline></video>
                 <canvas id="output_canvas" class="w-full h-full object-cover transform -scale-x-100"></canvas>
                 
-                <div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span>Live Tracking Active</span>
+                <div class="absolute top-3 left-3 bg-black border-2 border-white px-3 py-1 text-[11px] font-bold text-[#00ff66] flex items-center gap-2 shadow-[3px_3px_0px_0px_#ffffff]">
+                    <span class="w-2 h-2 bg-[#00ff66] animate-ping"></span>
+                    <span>LIVE VISION STREAM ACTIVE</span>
                 </div>
             </div>
 
             <div class="flex flex-col space-y-4">
                 
-                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 shadow-inner">
+                <div class="brutal-panel p-5">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average EAR</span>
-                        <span id="ear-value" class="font-mono font-bold text-xl text-blue-400">0.000</span>
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">AVERAGE EAR</span>
+                        <span id="ear-value" class="font-mono font-extrabold text-2xl text-[#00ff66]">0.000</span>
                     </div>
-                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
-                        <div id="ear-bar" class="bg-blue-500 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+                    <div class="w-full bg-black h-4 border-2 border-white p-0.5">
+                        <div id="ear-bar" class="bg-[#00ff66] h-full transition-all duration-150" style="width: 0%"></div>
                     </div>
-                    <div class="flex justify-between items-center mt-2 text-xs text-slate-400">
-                        <span>Threshold Limit: <strong class="text-slate-200">0.220</strong></span>
-                        <span id="threshold-status" class="text-emerald-400 font-medium">Safe</span>
+                    <div class="flex justify-between items-center mt-3 text-xs uppercase font-bold text-zinc-400">
+                        <span>LIMIT: <strong class="text-white">0.220</strong></span>
+                        <span id="threshold-status" class="text-[#00ff66]">SAFE</span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80 text-center">
-                        <span class="text-[11px] font-medium text-slate-400 block mb-1">Left Eye EAR</span>
-                        <span id="left-ear" class="font-mono font-semibold text-lg text-indigo-300">0.000</span>
+                    <div class="brutal-panel p-3 text-center">
+                        <span class="text-[10px] font-extrabold text-zinc-400 block mb-1 uppercase">LEFT EAR</span>
+                        <span id="left-ear" class="font-mono font-bold text-base text-cyan-400">0.000</span>
                     </div>
-                    <div class="bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/80 text-center">
-                        <span class="text-[11px] font-medium text-slate-400 block mb-1">Right Eye EAR</span>
-                        <span id="right-ear" class="font-mono font-semibold text-lg text-indigo-300">0.000</span>
+                    <div class="brutal-panel p-3 text-center">
+                        <span class="text-[10px] font-extrabold text-zinc-400 block mb-1 uppercase">RIGHT EAR</span>
+                        <span id="right-ear" class="font-mono font-bold text-base text-cyan-400">0.000</span>
                     </div>
                 </div>
 
-                <div class="text-xs text-slate-400 leading-relaxed bg-slate-900/40 p-4 rounded-xl border border-slate-800/80">
-                    <p class="flex items-start gap-2">
-                        <span class="text-blue-400 font-bold text-sm">ℹ️</span>
-                        <span>The system triggers an audio warning <strong>only when both eyes</strong> remain shut beneath the safe threshold continuously for ~1.5 seconds.</span>
+                <div class="text-xs font-bold text-zinc-300 brutal-panel p-4 leading-relaxed border-l-4 border-l-[#00ff66]">
+                    <p class="uppercase">
+                        <strong>[SYSTEM NOTE]:</strong> OVERLAYS ARE MAPPED TO IRIS COORDINATES AND REMAIN FULLY LOCKED & VISIBLE EVEN WHEN BLINKING.
                     </p>
                 </div>
             </div>
@@ -106,28 +121,33 @@
         let audioCtx = null;
         let currentEffect = 'sharingan';
 
+        // High-definition assets styled precisely after authentic Naruto Wiki art references & custom themes
+        const effectSources = {
+            sharingan: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96" fill="%23d60000" stroke="%23000" stroke-width="8"/><circle cx="100" cy="100" r="42" fill="%23000"/><circle cx="100" cy="100" r="16" fill="%23000"/><path d="M100,26 C122,26 138,44 132,68 C126,80 110,86 100,86 C90,86 74,80 68,68 C62,44 78,26 100,26 Z" fill="%23000" transform="rotate(0 100 100)"/><path d="M100,26 C122,26 138,44 132,68 C126,80 110,86 100,86 C90,86 74,80 68,68 C62,44 78,26 100,26 Z" fill="%23000" transform="rotate(120 100 100)"/><path d="M100,26 C122,26 138,44 132,68 C126,80 110,86 100,86 C90,86 74,80 68,68 C62,44 78,26 100,26 Z" fill="%23000" transform="rotate(240 100 100)"/></svg>',
+            reptilian: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23fde047"/><stop offset="70%" stop-color="%23ca8a04"/><stop offset="100%" stop-color="%23172554"/></radialGradient></defs><circle cx="100" cy="100" r="96" fill="url(%23g)" stroke="%23000" stroke-width="8"/><ellipse cx="100" cy="100" rx="14" ry="88" fill="%23000" stroke="%23fef08a" stroke-width="4"/></svg>',
+            cyberpunk: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="none" stroke="%2306b6d4" stroke-width="12" stroke-dasharray="16 12"/><circle cx="100" cy="100" r="62" fill="%23082f49" stroke="%2338bdf8" stroke-width="6"/><circle cx="100" cy="100" r="26" fill="%2322d3ee"/><circle cx="100" cy="100" r="10" fill="%23000"/></svg>',
+            demonic: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="d" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23fef08a"/><stop offset="40%" stop-color="%23f97316"/><stop offset="80%" stop-color="%23dc2626"/><stop offset="100%" stop-color="%23450a0a"/></radialGradient></defs><circle cx="100" cy="100" r="96" fill="url(%23d)" stroke="%23000" stroke-width="8"/><ellipse cx="100" cy="100" rx="18" ry="84" fill="%23000" stroke="%23fef08a" stroke-width="5"/></svg>',
+            galaxy: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="gal" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23f0abfc"/><stop offset="50%" stop-color="%236366f1"/><stop offset="100%" stop-color="%23020617"/></radialGradient></defs><circle cx="100" cy="100" r="96" fill="url(%23gal)" stroke="%23000" stroke-width="8"/><circle cx="50" cy="50" r="8" fill="%23fff"/><circle cx="150" cy="140" r="6" fill="%23fff"/><circle cx="130" cy="60" r="5" fill="%23fff"/><circle cx="100" cy="100" r="26" fill="%23000"/></svg>'
+        };
+
+        const loadedImages = {};
+        for (let key in effectSources) {
+            const img = new Image();
+            img.src = effectSources[key];
+            loadedImages[key] = img;
+        }
+
         // Effect switcher logic
         document.querySelectorAll('.effect-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.effect-btn').forEach(b => {
-                    b.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all";
+                    b.className = "effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-zinc-800 text-white";
                 });
                 currentEffect = btn.getAttribute('data-effect');
-                if (currentEffect === 'sharingan') {
-                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow hover:bg-red-900/80 transition-all";
-                } else if (currentEffect === 'reptilian') {
-                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-amber-950/80 border border-amber-500/50 text-amber-200 shadow hover:bg-amber-900/80 transition-all";
-                } else if (currentEffect === 'cyberpunk') {
-                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-950/80 border border-cyan-500/50 text-cyan-200 shadow hover:bg-cyan-900/80 transition-all";
-                } else if (currentEffect === 'demonic') {
-                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-orange-950/80 border border-orange-500/50 text-orange-200 shadow hover:bg-orange-900/80 transition-all";
-                } else if (currentEffect === 'galaxy') {
-                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-purple-950/80 border border-purple-500/50 text-purple-200 shadow hover:bg-purple-900/80 transition-all";
-                }
+                btn.className = "effect-btn brutal-btn px-4 py-2 text-xs font-bold uppercase bg-[#00ff66] text-black";
             });
         });
 
-        // Web Audio API Alarm Sound Generation
         function playAlarm() {
             try {
                 if (!audioCtx) {
@@ -178,10 +198,6 @@
         const RIGHT_EYE = [33, 159, 158, 133, 153, 145];
         const LEFT_EYE = [362, 380, 374, 263, 386, 385];
 
-        // Full eye contour landmark lists for exact clipping mask (eyelid closing/folding)
-        const RIGHT_EYE_CONTOUR = [33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7];
-        const LEFT_EYE_CONTOUR = [362, 398, 384, 385, 386, 387, 388, 466, 263, 249, 390, 373, 374, 380, 381, 382];
-
         function updateStatusUI(state, message) {
             const badge = document.getElementById('status-badge');
             const dot = document.getElementById('status-dot');
@@ -190,17 +206,17 @@
             text.innerText = message;
 
             if (state === 'safe') {
-                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 shadow-lg transition-all duration-300 flex items-center gap-2";
-                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+                badge.className = "px-5 py-2.5 text-xs font-extrabold uppercase bg-zinc-900 border-2 border-white shadow-[4px_4px_0px_0px_#00ff66] flex items-center gap-2 text-[#00ff66]";
+                dot.className = "w-3 h-3 bg-[#00ff66] animate-pulse";
             } else if (state === 'warning') {
-                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-amber-950/60 border border-amber-500/30 text-amber-300 shadow-lg transition-all duration-300 flex items-center gap-2";
-                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+                badge.className = "px-5 py-2.5 text-xs font-extrabold uppercase bg-zinc-900 border-2 border-white shadow-[4px_4px_0px_0px_#eab308] flex items-center gap-2 text-yellow-400";
+                dot.className = "w-3 h-3 bg-yellow-400 animate-pulse";
             } else if (state === 'danger') {
-                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow-lg shadow-red-900/30 transition-all duration-300 flex items-center gap-2 animate-pulse";
-                dot.className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-ping";
+                badge.className = "px-5 py-2.5 text-xs font-extrabold uppercase bg-red-950 border-2 border-red-500 shadow-[4px_4px_0px_0px_#ef4444] flex items-center gap-2 text-red-400 animate-pulse";
+                dot.className = "w-3 h-3 bg-red-500 animate-ping";
             } else {
-                badge.className = "px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow-lg transition-all duration-300 flex items-center gap-2";
-                dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+                badge.className = "px-5 py-2.5 text-xs font-extrabold uppercase bg-zinc-900 border-2 border-white shadow-[4px_4px_0px_0px_#ffffff] flex items-center gap-2 text-zinc-300";
+                dot.className = "w-3 h-3 bg-zinc-400";
             }
         }
 
@@ -234,27 +250,27 @@
                 if (bothEyesClosed) {
                     drowsyFrames++;
                     if (drowsyFrames > CONSECUTIVE_FRAMES) {
-                        updateStatusUI('danger', '⚠️ DROWSINESS DETECTED!');
-                        document.getElementById('threshold-status').innerText = 'Danger / Alarm Active';
-                        document.getElementById('threshold-status').className = 'text-red-400 font-bold';
+                        updateStatusUI('danger', '!! DROWSINESS ALERT !!');
+                        document.getElementById('threshold-status').innerText = 'DANGER // ALARM ACTIVE';
+                        document.getElementById('threshold-status').className = 'text-red-500 font-extrabold';
                         playAlarm();
                     } else {
-                        updateStatusUI('warning', 'Both Eyes Closed...');
-                        document.getElementById('threshold-status').innerText = 'Closing Warning';
-                        document.getElementById('threshold-status').className = 'text-amber-400 font-medium';
+                        updateStatusUI('warning', 'EYES CLOSING...');
+                        document.getElementById('threshold-status').innerText = 'WARNING';
+                        document.getElementById('threshold-status').className = 'text-yellow-400 font-extrabold';
                     }
                 } else {
                     drowsyFrames = 0;
-                    updateStatusUI('safe', 'Monitoring / Active');
-                    document.getElementById('threshold-status').innerText = 'Safe';
-                    document.getElementById('threshold-status').className = 'text-emerald-400 font-medium';
+                    updateStatusUI('safe', 'SYSTEM ACTIVE');
+                    document.getElementById('threshold-status').innerText = 'SAFE';
+                    document.getElementById('threshold-status').className = 'text-[#00ff66] font-extrabold';
                 }
 
-                // Render selected eye effect on both eyes with eyelid clipping
-                drawClippedEyeEffect(canvasCtx, landmarks, true, currentEffect, canvasElement.width, canvasElement.height);
-                drawClippedEyeEffect(canvasCtx, landmarks, false, currentEffect, canvasElement.width, canvasElement.height);
+                // Render selected eye effect on both eyes WITHOUT eyelid clipping (effects stay open and float over eyes)
+                drawEyeEffect(canvasCtx, landmarks, true, currentEffect, canvasElement.width, canvasElement.height);
+                drawEyeEffect(canvasCtx, landmarks, false, currentEffect, canvasElement.width, canvasElement.height);
             } else {
-                updateStatusUI('neutral', 'No Face Detected');
+                updateStatusUI('neutral', 'NO FACE DETECTED');
                 document.getElementById('ear-value').innerText = "0.000";
                 document.getElementById('left-ear').innerText = "0.000";
                 document.getElementById('right-ear').innerText = "0.000";
@@ -263,177 +279,30 @@
             canvasCtx.restore();
         }
 
-        function drawClippedEyeEffect(ctx, landmarks, isLeft, effect, width, height) {
+        function drawEyeEffect(ctx, landmarks, isLeft, effect, width, height) {
             ctx.save();
 
-            // 1. Create a clipping mask from the exact eye contour so effect folds & closes with eyelids
-            ctx.beginPath();
-            const contourIndices = isLeft ? LEFT_EYE_CONTOUR : RIGHT_EYE_CONTOUR;
-            contourIndices.forEach((idx, i) => {
-                let pt = landmarks[idx];
-                let x = pt.x * width;
-                let y = pt.y * height;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.closePath();
-            ctx.clip();
-
-            // 2. Determine precise iris center (`473` for left eye iris, `468` for right eye iris)
             let centerIdx = isLeft ? 473 : 468;
             let irisPt = landmarks[centerIdx] || landmarks[isLeft ? 362 : 33];
             let cx = irisPt.x * width;
             let cy = irisPt.y * height;
 
-            // Compute eye width to scale the iris effect perfectly
             let innerCorner = landmarks[isLeft ? 362 : 33];
             let outerCorner = landmarks[isLeft ? 263 : 133];
             let eyeWidth = euclideanDistance(innerCorner, outerCorner) * width;
-            let r = eyeWidth * 0.42; // Perfect radius matching human iris proportion
+            let r = eyeWidth * 0.48;
 
             ctx.translate(cx, cy);
 
             if (effect === 'sharingan') {
-                // Authentic Sharingan Design (Crimson background, outer black ring, central pupil, 3 Tomoe commas)
-                let grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
-                grad.addColorStop(0, '#ff1e00');
-                grad.addColorStop(0.7, '#d90429');
-                grad.addColorStop(1, '#800000');
-
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                ctx.fillStyle = grad;
-                ctx.fill();
-                ctx.lineWidth = r * 0.15;
-                ctx.strokeStyle = '#000000';
-                ctx.stroke();
-
-                // Inner black ring around pupil
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 0.52, 0, 2 * Math.PI);
-                ctx.lineWidth = r * 0.08;
-                ctx.strokeStyle = '#000000';
-                ctx.stroke();
-
-                // Central black pupil
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 0.22, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
-
-                // 3 Authentic Tomoe (comma shapes) spaced at 120 degrees
-                for (let i = 0; i < 3; i++) {
-                    ctx.save();
-                    ctx.rotate((i * 2 * Math.PI) / 3 + (Date.now() / 3000)); // Gentle rotation animation
-                    let tomoeDist = r * 0.72;
-                    
-                    // Comma head
-                    ctx.beginPath();
-                    ctx.arc(tomoeDist, 0, r * 0.13, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#000000';
-                    ctx.fill();
-
-                    // Comma tail
-                    ctx.beginPath();
-                    ctx.moveTo(tomoeDist - r * 0.1, -r * 0.05);
-                    ctx.quadraticCurveTo(tomoeDist - r * 0.4, -r * 0.3, tomoeDist - r * 0.6, -r * 0.45);
-                    ctx.quadraticCurveTo(tomoeDist - r * 0.3, -r * 0.15, tomoeDist + r * 0.05, r * 0.05);
-                    ctx.closePath();
-                    ctx.fillStyle = '#000000';
-                    ctx.fill();
-                    ctx.restore();
-                }
-            } else if (effect === 'reptilian') {
-                let grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
-                grad.addColorStop(0, '#facc15');
-                grad.addColorStop(0.6, '#ca8a04');
-                grad.addColorStop(1, '#451a03');
-
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                ctx.fillStyle = grad;
-                ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#713f12';
-                ctx.stroke();
-
-                // Vertical slit pupil
-                ctx.beginPath();
-                ctx.ellipse(0, 0, r * 0.15, r * 0.85, 0, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
-                ctx.lineWidth = 1.5;
-                ctx.strokeStyle = '#fde047';
-                ctx.stroke();
+                ctx.rotate(Date.now() / 2200); // Rotating 3-Tomoe Sharingan animation
             } else if (effect === 'cyberpunk') {
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#06b6d4';
-                ctx.lineWidth = 2.5;
-                ctx.setLineDash([4, 4]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-
-                ctx.save();
                 ctx.rotate(Date.now() / 500);
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 1.2, 0, Math.PI / 1.5);
-                ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                ctx.restore();
+            }
 
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 0.32, 0, 2 * Math.PI);
-                ctx.fillStyle = '#22d3ee';
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 0.15, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
-            } else if (effect === 'demonic') {
-                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.15);
-                grad.addColorStop(0, '#fef08a');
-                grad.addColorStop(0.4, '#f97316');
-                grad.addColorStop(0.8, '#b91c1c');
-                grad.addColorStop(1, '#450a0a');
-
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 1.15, 0, 2 * Math.PI);
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.ellipse(0, 0, r * 0.2, r * 0.8, 0, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#fef08a';
-                ctx.stroke();
-            } else if (effect === 'galaxy') {
-                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-                grad.addColorStop(0, '#e879f9');
-                grad.addColorStop(0.4, '#818cf8');
-                grad.addColorStop(1, '#020617');
-
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, 2 * Math.PI);
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                ctx.fillStyle = '#ffffff';
-                for (let i = 0; i < 5; i++) {
-                    let angle = (i * Math.PI / 2.5) + (Date.now() / 1000);
-                    let dist = r * 0.6;
-                    ctx.beginPath();
-                    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.07, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-
-                ctx.beginPath();
-                ctx.arc(0, 0, r * 0.28, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000000';
-                ctx.fill();
+            const img = loadedImages[effect];
+            if (img && img.complete) {
+                ctx.drawImage(img, -r, -r, r * 2, r * 2);
             }
 
             ctx.restore();
@@ -445,7 +314,7 @@
 
         faceMesh.setOptions({
             maxNumFaces: 1,
-            refineLandmarks: true, // Crucial for precise iris landmark tracking (468, 473)
+            refineLandmarks: true,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
@@ -462,7 +331,7 @@
 
         camera.start().catch(err => {
             console.error("Camera access error:", err);
-            updateStatusUI('danger', 'Camera Access Denied');
+            updateStatusUI('danger', 'CAMERA ACCESS DENIED');
         });
     </script>
 </body>
