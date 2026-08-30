@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Drowsiness & Distraction Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-700">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+                AI Drowsiness & Distraction Detector
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">Powered by MediaPipe Face Mesh & Eye Aspect Ratio (EAR)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            <div class="md:col-span-2 relative flex justify-center bg-black rounded-xl overflow-hidden shadow-inner border border-slate-700">
+                <video id="webcam" class="hidden" playsinline></video>
+                <canvas id="output_canvas" class="w-full h-auto object-cover transform -scale-x-100"></canvas>
+            </div>
+
+            <div class="flex flex-col space-y-4 bg-slate-900/50 p-6 rounded-xl border border-slate-700">
+                <div class="text-center">
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">System Status</span>
+                    <div class="mt-2">
+                        <span id="status-badge" class="px-4 py-2 rounded-full text-white font-bold bg-gray-500 inline-block shadow">
+                            Initializing...
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                    <div class="flex justify-between items-center text-sm mb-1">
+                        <span class="text-slate-400">Current EAR:</span>
+                        <span id="ear-value" class="font-mono font-bold text-lg text-blue-400">0.000</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-400">Threshold:</span>
+                        <span class="font-mono text-slate-300">0.220</span>
+                    </div>
+                </div>
+
+                <div class="text-xs text-slate-400 leading-relaxed bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <p>💡 <strong class="text-slate-300">How it works:</strong> The detector maps 468 3D facial landmarks to calculate the Eye Aspect Ratio (EAR). If eyes remain closed for ~1.5 seconds, an alarm will sound.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        let drowsyFrames = 0;
+        let audioCtx = null;
+
+        // Web Audio API Alarm Sound
+        function playAlarm() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.error("Audio context error:", e);
+            }
+        }
+
+        function euclideanDistance(p1, p2) {
+            return Math.sqrt(
+                Math.pow(p1.x - p2.x, 2) + 
+                Math.pow(p1.y - p2.y, 2) + 
+                Math.pow((p1.z || 0) - (p2.z || 0), 2)
+            );
+        }
+
+        function calculateEAR(landmarks, eyeIndices) {
+            const p1 = landmarks[eyeIndices[0]];
+            const p2 = landmarks[eyeIndices[1]];
+            const p3 = landmarks[eyeIndices[2]];
+            const p4 = landmarks[eyeIndices[3]];
+            const p5 = landmarks[eyeIndices[4]];
+            const p6 = landmarks[eyeIndices[5]];
+
+            const vertical1 = euclideanDistance(p2, p6);
+            const vertical2 = euclideanDistance(p3, p5);
+            const horizontal = euclideanDistance(p1, p4);
+
+            return (vertical1 + vertical2) / (2.0 * horizontal);
+        }
+
+        const RIGHT_EYE = [33, 159, 158, 133, 153, 145];
+        const LEFT_EYE = [362, 380, 374, 263, 386, 385];
+
+        function onResults(results) {
+            canvasElement.width = videoElement.videoWidth || 640;
+            canvasElement.height = videoElement.videoHeight || 480;
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+
+                const leftEAR = calculateEAR(landmarks, LEFT_EYE);
+                const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
+                const avgEAR = (leftEAR + rightEAR) / 2.0;
+
+                document.getElementById('ear-value').innerText = avgEAR.toFixed(3);
+
+                const EAR_THRESHOLD = 0.22;
+                const CONSECUTIVE_FRAMES = 45; // ~1.5 seconds at 30fps
+
+                if (avgEAR < EAR_THRESHOLD) {
+                    drowsyFrames++;
+                    if (drowsyFrames > CONSECUTIVE_FRAMES) {
+                        document.getElementById('status-badge').innerText = "⚠️ DROWSINESS ALERT!";
+                        document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-red-600 animate-pulse inline-block shadow";
+                        playAlarm();
+                    } else {
+                        document.getElementById('status-badge').innerText = "Eyes Closed...";
+                        document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-amber-500 inline-block shadow";
+                    }
+                } else {
+                    drowsyFrames = 0;
+                    document.getElementById('status-badge').innerText = "Active / Awake";
+                    document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-emerald-600 inline-block shadow";
+                }
+
+                // Draw eye tracking indicators
+                drawEyeLandmarks(canvasCtx, landmarks, LEFT_EYE);
+                drawEyeLandmarks(canvasCtx, landmarks, RIGHT_EYE);
+            } else {
+                document.getElementById('status-badge').innerText = "No Face Detected";
+                document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-slate-600 inline-block shadow";
+                document.getElementById('ear-value').innerText = "0.000";
+            }
+            canvasCtx.restore();
+        }
+
+        function drawEyeLandmarks(ctx, landmarks, indices) {
+            ctx.fillStyle = '#38bdf8';
+            indices.forEach(index => {
+                const pt = landmarks[index];
+                ctx.beginPath();
+                ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        }
+
+        const faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await faceMesh.send({ image: videoElement });
+            },
+            width: 640,
+            height: 480
+        });
+
+        camera.start().catch(err => {
+            console.error("Camera access error:", err);
+            document.getElementById('status-badge').innerText = "Camera Access Denied";
+            document.getElementById('status-badge').className = "px-4 py-2 rounded-full text-white font-bold bg-red-600 inline-block shadow";
+        });
+    </script>
+</body>
+</html>
