@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced AI Drowsiness & Distraction Detector</title>
+    <title>Advanced AI Drowsiness & Distraction Detector - Custom Eye FX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -28,13 +28,25 @@
                 <h1 class="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
                     AuraGuard AI
                 </h1>
-                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness & Distraction Monitor</p>
+                <p class="text-slate-400 text-sm mt-0.5">Real-time Dual-Eye Biometric Drowsiness & Distraction Monitor + Custom Eye FX</p>
             </div>
             <div id="status-badge" class="px-5 py-2.5 rounded-full text-sm font-semibold bg-slate-800/80 border border-slate-700 shadow-lg transition-all duration-300 flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse" id="status-dot"></span>
                 <span id="status-text">Initializing System...</span>
             </div>
         </header>
+
+        <!-- Eye FX Selection Toolbar -->
+        <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Select Eye Effect:</span>
+            <div class="flex flex-wrap gap-2" id="effect-buttons">
+                <button data-effect="sharingan" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow hover:bg-red-900/80 transition-all">🔴 Sharingan</button>
+                <button data-effect="reptilian" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🦎 Reptilian</button>
+                <button data-effect="cyberpunk" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🌐 Cyberpunk</button>
+                <button data-effect="demonic" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🔥 Demonic</button>
+                <button data-effect="galaxy" class="effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all">🌌 Galaxy</button>
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
@@ -92,6 +104,28 @@
 
         let drowsyFrames = 0;
         let audioCtx = null;
+        let currentEffect = 'sharingan';
+
+        // Effect switcher logic
+        document.querySelectorAll('.effect-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.effect-btn').forEach(b => {
+                    b.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 shadow hover:bg-slate-700 transition-all";
+                });
+                currentEffect = btn.getAttribute('data-effect');
+                if (currentEffect === 'sharingan') {
+                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-red-950/80 border border-red-500/50 text-red-200 shadow hover:bg-red-900/80 transition-all";
+                } else if (currentEffect === 'reptilian') {
+                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-amber-950/80 border border-amber-500/50 text-amber-200 shadow hover:bg-amber-900/80 transition-all";
+                } else if (currentEffect === 'cyberpunk') {
+                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-950/80 border border-cyan-500/50 text-cyan-200 shadow hover:bg-cyan-900/80 transition-all";
+                } else if (currentEffect === 'demonic') {
+                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-orange-950/80 border border-orange-500/50 text-orange-200 shadow hover:bg-orange-900/80 transition-all";
+                } else if (currentEffect === 'galaxy') {
+                    btn.className = "effect-btn px-4 py-2 rounded-xl text-xs font-semibold bg-purple-950/80 border border-purple-500/50 text-purple-200 shadow hover:bg-purple-900/80 transition-all";
+                }
+            });
+        });
 
         // Web Audio API Alarm Sound Generation
         function playAlarm() {
@@ -181,19 +215,16 @@
                 const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
                 const avgEAR = (leftEAR + rightEAR) / 2.0;
 
-                // Update text telemetry
                 document.getElementById('ear-value').innerText = avgEAR.toFixed(3);
                 document.getElementById('left-ear').innerText = leftEAR.toFixed(3);
                 document.getElementById('right-ear').innerText = rightEAR.toFixed(3);
 
-                // Update Progress bar width (scale 0 to 0.4 max)
                 let barPercentage = Math.min(Math.max((avgEAR / 0.4) * 100, 0), 100);
                 document.getElementById('ear-bar').style.width = barPercentage + '%';
 
                 const EAR_THRESHOLD = 0.22;
-                const CONSECUTIVE_FRAMES = 45; // ~1.5 seconds at 30fps
+                const CONSECUTIVE_FRAMES = 45; 
 
-                // STRICT CONDITION: Both eyes must be closed simultaneously
                 const bothEyesClosed = (leftEAR < EAR_THRESHOLD) && (rightEAR < EAR_THRESHOLD);
 
                 if (bothEyesClosed) {
@@ -215,9 +246,9 @@
                     document.getElementById('threshold-status').className = 'text-emerald-400 font-medium';
                 }
 
-                // Draw subtle tracking highlights
-                drawEyeLandmarks(canvasCtx, landmarks, LEFT_EYE);
-                drawEyeLandmarks(canvasCtx, landmarks, RIGHT_EYE);
+                // Render selected eye effect on both eyes
+                drawEyeEffect(canvasCtx, landmarks, true, currentEffect, canvasElement.width, canvasElement.height);
+                drawEyeEffect(canvasCtx, landmarks, false, currentEffect, canvasElement.width, canvasElement.height);
             } else {
                 updateStatusUI('neutral', 'No Face Detected');
                 document.getElementById('ear-value').innerText = "0.000";
@@ -228,14 +259,142 @@
             canvasCtx.restore();
         }
 
-        function drawEyeLandmarks(ctx, landmarks, indices) {
-            ctx.fillStyle = '#38bdf8';
-            indices.forEach(index => {
-                const pt = landmarks[index];
+        function drawEyeEffect(ctx, landmarks, isLeft, effect, width, height) {
+            let centerIdx = isLeft ? 473 : 468;
+            let pt = landmarks[centerIdx] || landmarks[isLeft ? 362 : 33];
+            let cx = pt.x * width;
+            let cy = pt.y * height;
+
+            let innerCorner = landmarks[isLeft ? 362 : 33];
+            let outerCorner = landmarks[isLeft ? 263 : 133];
+            let eyeWidth = euclideanDistance(innerCorner, outerCorner) * width;
+            let r = eyeWidth * 0.38;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            if (effect === 'sharingan') {
                 ctx.beginPath();
-                ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 2.5, 0, 2 * Math.PI);
+                ctx.arc(0, 0, r, 0, 2 * Math.PI);
+                ctx.fillStyle = '#dc2626';
                 ctx.fill();
-            });
+                ctx.lineWidth = r * 0.12;
+                ctx.strokeStyle = '#991b1b';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.55, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.22, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+
+                for (let i = 0; i < 3; i++) {
+                    ctx.save();
+                    ctx.rotate((i * 2 * Math.PI) / 3);
+                    let tomoeDist = r * 0.38;
+                    ctx.beginPath();
+                    ctx.arc(tomoeDist, 0, r * 0.12, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#000000';
+                    ctx.fill();
+                    ctx.restore();
+                }
+            } else if (effect === 'reptilian') {
+                let grad = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+                grad.addColorStop(0, '#facc15');
+                grad.addColorStop(0.7, '#ca8a04');
+                grad.addColorStop(1, '#1e293b');
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, 2 * Math.PI);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#713f12';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, r * 0.16, r * 0.78, 0, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#fde047';
+                ctx.stroke();
+            } else if (effect === 'cyberpunk') {
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, 2 * Math.PI);
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.save();
+                ctx.rotate(Date.now() / 600);
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 1.25, 0, Math.PI / 2);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.3, 0, 2 * Math.PI);
+                ctx.fillStyle = '#22d3ee';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.15, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+            } else if (effect === 'demonic') {
+                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.15);
+                grad.addColorStop(0, '#fef08a');
+                grad.addColorStop(0.4, '#f97316');
+                grad.addColorStop(0.8, '#b91c1c');
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 1.15, 0, 2 * Math.PI);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, r * 0.22, r * 0.75, 0, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fef08a';
+                ctx.stroke();
+            } else if (effect === 'galaxy') {
+                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+                grad.addColorStop(0, '#c084fc');
+                grad.addColorStop(0.5, '#6366f1');
+                grad.addColorStop(1, '#0f172a');
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, 2 * Math.PI);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 4; i++) {
+                    let angle = (i * Math.PI / 2) + (Date.now() / 800);
+                    let dist = r * 0.55;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, r * 0.08, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.25, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000000';
+                ctx.fill();
+            }
+
+            ctx.restore();
         }
 
         const faceMesh = new FaceMesh({
